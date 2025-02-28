@@ -63,3 +63,10 @@ button:hover {
   text-align: center;
   box-sizing: border-box;
 }
+
+.snapshot-audio-player {
+  display: "block";
+  width: 100%;
+  max-width: 300px;
+  margin: 10px 0;
+}

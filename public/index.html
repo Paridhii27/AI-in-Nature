@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./style.css" />
-    <title>Camera Snapshot with Selection</title>
+    <title>AI in Nature</title>
   </head>
   <body>
-    <h1>Camera Snapshot with Selection</h1>
+    <h1>Explore your environment</h1>
     <p>
-      Click anywhere on the video to capture that area. A red square will mark
-      your selection.
+      Click anywhere on the video to capture an area you want to interact with
+      more. A red square will mark your selection.
     </p>
 
     <!-- Video element will display the camera feed -->
@@ -32,8 +32,9 @@
 
     <div id="errorMessage" class="error"></div>
 
-    <h3>Snapshots (Click on video to capture selection area)</h3>
+    <h3>Snapshots (Click on video to capture)</h3>
     <div id="snapshots" class="snapshots"></div>
+    <p id="analysisResult"></p>
 
     <script src="./script.js"></script>
   </body>

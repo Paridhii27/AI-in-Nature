@@ -9,7 +9,7 @@ import { dirname, join } from "path";
 dotenv.config();
 
 const app = express();
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "50mb" }));
 app.use(cors());
 
 const PORT = process.env.PORT || 3001;
@@ -19,19 +19,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 app.use(express.static(join(__dirname, "public")));
 
-const openai = new OpenAI();
+//Initializing API clients
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-function encodeImage(imagePath) {
-  // Convert image to base64
-  const imageBuffer = fs.readFileSync(imagePath);
-  return imageBuffer.toString("base64");
-}
+const soundClient = new ElevenLabsClient({
+  apiKey: process.env.ELEVENLABS_API_KEY,
+});
 
-const imagePath = fullImageDataURL;
-const base64Image = encodeImage(imagePath);
+app.get("/", (req, res) => {
+  res.send("Starting");
+});
 
-async function analyzeImage() {
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "health ok" });
+});
+
+app.post("/api/analyze", async (req, res) => {
   try {
+    // Get base64 image from request body
+    const { base64Image } = req.body;
+
+    if (!base64Image) {
+      return res.status(400).json({ error: "No image data provided" });
+    }
+
+    // Call OpenAI Vision API
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -49,12 +63,44 @@ async function analyzeImage() {
           ],
         },
       ],
+      max_tokens: 50,
     });
 
-    console.log(response.choices[0]);
-  } catch (error) {
-    console.error("Error calling OpenAI API:", error);
-  }
-}
+    // Extract the response content
+    const content = response.choices[0].message.content;
+    const initialResponse = {
+      content: content,
+    };
+    const audioStream = await soundClient.textToSpeech.convertAsStream(
+      "Yko7PKHZNXotIFUBG7I9",
+      {
+        text: content,
+        model_id: "eleven_multilingual_v2",
+        output_format: "mp3_44100_128",
+      }
+    );
 
-analyzeImage();
+    // Collect all chunks of audio data
+    const chunks = [];
+    for await (const chunk of audioStream) {
+      chunks.push(Buffer.from(chunk));
+    }
+
+    // Create audio buffer and convert to base64
+    const audioBuffer = Buffer.concat(chunks);
+    const audioBase64 = audioBuffer.toString("base64");
+
+    // Return both text and audio
+    res.json({
+      content: content,
+      audio: audioBase64,
+    });
+  } catch (error) {
+    console.error("Error calling the API:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port http://localhost:${PORT}`);
+});

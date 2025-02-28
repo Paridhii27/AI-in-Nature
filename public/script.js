@@ -1,4 +1,3 @@
-// Get references to DOM elements
 const videoElement = document.getElementById("videoElement");
 const canvas = document.getElementById("canvas");
 const startButton = document.getElementById("startButton");
@@ -18,8 +17,8 @@ async function startCamera() {
     // Request access to the user's camera
     // The constraints object specifies what kind of media to request
     stream = await navigator.mediaDevices.getUserMedia({
-      video: true, // We want video
-      audio: false, // We don't need audio for this demo
+      video: true,
+      audio: false,
     });
 
     // Attach the stream to the video element
@@ -159,16 +158,22 @@ function createSnapshotElement(imageURL, caption, filename) {
   snapshotDiv.appendChild(downloadLink);
   snapshotDiv.appendChild(timestampDiv);
 
+  // Create a placeholder for the analysis result
+  const analysisDiv = document.createElement("div");
+  analysisDiv.className = "analysis-result";
+  analysisDiv.textContent = "Analyzing image...";
+  snapshotDiv.appendChild(analysisDiv);
+
   // Add the snapshot to the page
   snapshotsContainer.appendChild(snapshotDiv);
+
+  analyzeImage(imageURL, analysisDiv);
 }
 
-// Function to clear all snapshots
 function clearSnapshots() {
   snapshotsContainer.innerHTML = "";
 }
 
-// Add event listeners to buttons
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
 clearButton.addEventListener("click", clearSnapshots);
@@ -181,11 +186,62 @@ window.addEventListener("beforeunload", () => {
   stopCamera();
 });
 
-stopButton.addEventListener("click", () => {
-  const baseURL = fullImageDataURL || "no url";
-  fetch(`/api/analyze?baseURL=${baseURL}`)
-    .then((response) => response.text())
-    .then((url) => {
-      const output = document.getElementById("analysisResult");
+function analyzeImage(imageURL, resultElement) {
+  // Extract base64 data from the dataURL
+  const base64Image = imageURL.split(",")[1];
+
+  if (resultElement) {
+    resultElement.textContent = "Analyzing image...";
+  }
+
+  // Send the base64 data to the server
+  fetch("/api/analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ base64Image: base64Image }),
+    timeout: 60000,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (resultElement) {
+        resultElement.innerHTML = "";
+
+        // Creating text element
+        const textDiv = document.createElement("div");
+        textDiv.className = "text-response";
+        textDiv.textContent = data.content || "No analysis available";
+        resultElement.appendChild(textDiv);
+
+        // Creating an audio element
+        if (data.audio) {
+          const audioElement = document.createElement("audio");
+          audioElement.controls = true;
+
+          const audioBlob = new Blob(
+            [Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0))],
+            { type: "audio/mpeg" }
+          );
+
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          audioElement.src = audioUrl;
+          audioElement.className = "snapshot-audio-player";
+
+          audioElement.onloadeddata = () => {
+            URL.revokeObjectURL(audioUrl);
+          };
+
+          resultElement.appendChild(audioElement);
+          console.log("playing sound");
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error analyzing image:", error);
+      if (resultElement) {
+        resultElement.textContent = "Error analyzing image";
+      }
     });
-});
+}
