@@ -1,5 +1,9 @@
+# node related files #
+/node_modules
+package-lock.json
+
+# env related files #
 .env
-node_modules
 
 # OS generated files #
 .DS_Store
