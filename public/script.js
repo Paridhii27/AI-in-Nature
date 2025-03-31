@@ -3,11 +3,13 @@ const canvas = document.getElementById("canvas");
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 const clearButton = document.getElementById("clearButton");
+const reverseButton = document.getElementById("reverseButton");
 const errorMessage = document.getElementById("errorMessage");
 const snapshotsContainer = document.getElementById("snapshots");
 
-// Variable to store the media stream
+// Variables to store the media stream and current camera
 let stream = null;
+let currentCamera = "environment"; // 'environment' for back camera, 'user' for front camera
 
 // Function to start the camera
 async function startCamera() {
@@ -17,7 +19,9 @@ async function startCamera() {
     // Request access to the user's camera
     // The constraints object specifies what kind of media to request
     stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: {
+        facingMode: currentCamera,
+      },
       audio: false,
     });
 
@@ -54,6 +58,24 @@ function stopCamera() {
   stream = null;
 
   console.log("Camera stopped");
+}
+
+// Function to switch between front and back cameras
+async function switchCamera() {
+  if (!stream) {
+    errorMessage.textContent =
+      "Camera is not active. Please start the camera first.";
+    return;
+  }
+
+  // Stop the current stream
+  stopCamera();
+
+  // Switch the camera facing mode
+  currentCamera = currentCamera === "environment" ? "user" : "environment";
+
+  // Start the camera with the new facing mode
+  await startCamera();
 }
 
 // Function to capture a snapshot from the video stream with a highlighted area
@@ -177,6 +199,7 @@ function clearSnapshots() {
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
 clearButton.addEventListener("click", clearSnapshots);
+reverseButton.addEventListener("click", switchCamera);
 
 // Add click event listener to the video element to capture snapshots
 videoElement.addEventListener("click", captureSnapshot);

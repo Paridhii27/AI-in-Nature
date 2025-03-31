@@ -28,16 +28,38 @@
 body {
   background-color: var(--bg-colour);
   font-family: Arial, sans-serif;
-  max-width: 800px;
+  width: 415px;
+  height: 850px;
   margin: 0 auto;
   padding: 20px;
   text-align: center;
 }
 
+h1 {
+  font-family: "Madimi One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 35px;
+}
+
+#project-title {
+  background-color: var(--light-green);
+  border-radius: 15px;
+}
+
+#sights {
+  color: var(--bg-colour);
+}
+
+#insights {
+  color: var(--dark-brown);
+}
+
 video {
+  height: 550px;
   max-width: 100%;
-  border: 3px solid #333;
-  border-radius: 8px;
+  border: 5px solid var(--light-green);
+  border-radius: 15px;
   margin: 20px 0;
   cursor: pointer;
 }
@@ -103,4 +125,13 @@ button:hover {
   width: 100%;
   max-width: 300px;
   margin: 10px 0;
+}
+
+/* Adjustments for larger screens */
+@media (min-width: 576px) {
+  /* tablets and ipads */
+}
+
+@media (min-width: 768px) {
+  /* larger screen size */
 }

@@ -7,11 +7,14 @@
     <title>AI in Nature</title>
   </head>
   <body>
-    <h1>Explore your environment</h1>
-    <p>
+    <h1 id="project-title">
+      <span id="sights">SIGHTS </span><span><img src="./icons/logo.png" /></span
+      ><span id="insights">INSIGHTS</span>
+    </h1>
+    <!-- <p>
       Click anywhere on the video to capture an area you want to interact with
       more. A red square will mark your selection.
-    </p>
+    </p> -->
 
     <!-- Video element will display the camera feed -->
     <video
@@ -27,12 +30,12 @@
     <div class="controls">
       <button id="startButton">Start Camera</button>
       <button id="stopButton">Stop Camera</button>
+      <button id="reverseButton">Reverse</button>
       <button id="clearButton">Clear Snapshots</button>
     </div>
 
     <div id="errorMessage" class="error"></div>
 
-    <h3>Snapshots (Click on video to capture)</h3>
     <div id="snapshots" class="snapshots"></div>
     <p id="analysisResult"></p>
 
