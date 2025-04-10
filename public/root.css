@@ -1,0 +1,48 @@
+/* ROOT STYLING */
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Madimi+One&display=swap");
+
+:root {
+  --bg-color: #ecf0ea;
+  --bottom-bar-bg: #e0eadc;
+  --light-text: #88967f;
+  --dark-text: #40483a;
+  --primary-blue: #65b2c2;
+  --primary-yellow: #e1af39;
+  --light-green: #a6bb65;
+  --dark-green: #377440;
+  --light-brown: #c1a16e;
+  --dark-brown: #775a35;
+}
+
+.madimi-one-regular {
+  font-family: "Madimi One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.lexend-paragraph {
+  font-family: "Lexend", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+html {
+  /* display: flex; */
+  justify-content: center;
+  background-color: white;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  width: 100%;
+  max-width: 415px;
+  height: 100vh;
+  max-height: 850px;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 auto;
+  background-color: var(--bg-color);
+}

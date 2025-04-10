@@ -1,0 +1,29 @@
+.navbar {
+  background-color: var(--bottom-bar-bg);
+
+  bottom: 15px;
+  position: absolute;
+
+  width: 100%;
+  max-width: 350px;
+  border-radius: 50px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 15px;
+  padding-bottom: 10px; /* some needed conpensation for position, I dont know why */
+  /* margin: 15px; */
+}
+
+.nav-item {
+  cursor: pointer;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: #111;
+}
+
+.nav-item i {
+  pointer-events: none;
+}
