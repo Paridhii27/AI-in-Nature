@@ -1,6 +1,6 @@
 const videoElement = document.getElementById("videoElement");
 const canvas = document.getElementById("canvas");
-const startButton = document.getElementById("startButton");
+const startButton = document.getElementById("camera-start");
 const stopButton = document.getElementById("stopButton");
 const clearButton = document.getElementById("clearButton");
 const reverseButton = document.getElementById("reverseButton");

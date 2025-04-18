@@ -28,6 +28,7 @@
     "dotenv": "^16.4.7",
     "elevenlabs": "^1.52.0",
     "express": "^4.21.2",
+    "nodemon": "^3.1.9",
     "openai": "^4.86.1"
   }
 }
