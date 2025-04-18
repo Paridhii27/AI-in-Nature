@@ -1,6 +1,6 @@
 const videoElement = document.getElementById("videoElement");
 const canvas = document.getElementById("canvas");
-const startButton = document.getElementById("camera-start");
+const startButton = document.getElementById("cameraStart");
 const stopButton = document.getElementById("stopButton");
 const clearButton = document.getElementById("clearButton");
 const reverseButton = document.getElementById("reverseButton");
@@ -18,7 +18,8 @@ let currentCamera = "environment"; // 'environment' for back camera, 'user' for 
 
 // Function to start the camera
 async function startCamera() {
-  errorMessage.textContent = ""; // Clear any previous errors
+  // Clear any previous errors
+  errorMessage.textContent = "";
 
   try {
     // Request access to the user's camera
@@ -31,6 +32,9 @@ async function startCamera() {
 
     // Attach the stream to the video element
     videoElement.srcObject = stream;
+
+    // Add click event listener to video element after stream is started
+    videoElement.addEventListener("click", handleVideoClick);
 
     console.log("Camera started successfully");
   } catch (error) {
@@ -48,9 +52,23 @@ async function startCamera() {
   }
 }
 
+// Function to handle video click
+function handleVideoClick(event) {
+  console.log("Video clicked");
+  if (stream) {
+    captureSnapshot(event);
+    console.log("Snapshot captured");
+  } else {
+    errorMessage.textContent = "Please start the camera first";
+  }
+}
+
 // Function to stop the camera
 function stopCamera() {
   if (!stream) return;
+
+  // Remove click event listener
+  videoElement.removeEventListener("click", handleVideoClick);
 
   // Get all tracks from the stream and stop each one
   stream.getTracks().forEach((track) => {
@@ -74,10 +92,8 @@ async function switchCamera() {
 
   // Stop the current stream
   stopCamera();
-
   // Switch the camera facing mode
   currentCamera = currentCamera === "environment" ? "user" : "environment";
-
   // Start the camera with the new facing mode
   await startCamera();
 }
@@ -209,25 +225,19 @@ stopButton.addEventListener("click", stopCamera);
 clearButton.addEventListener("click", clearSnapshots);
 reverseButton.addEventListener("click", switchCamera);
 
-// Add click event listener to the video element to capture snapshots
-videoElement.addEventListener("click", (event) => {
-  // Only capture if camera is active
-  if (stream) {
-    captureSnapshot(event);
-  } else {
-    errorMessage.textContent = "Please start the camera first";
-  }
-});
-
 // Start the camera when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-  // Start camera immediately when page loads
-  startCamera();
-
-  // Hide the start button since we're starting automatically
+  // Show the start button
   if (startButton) {
-    startButton.style.display = "none";
+    startButton.style.display = "block";
   }
+
+  // Add click event listener to start button
+  startButton.addEventListener("click", () => {
+    startCamera();
+    // Hide the start button after starting the camera
+    startButton.style.display = "none";
+  });
 });
 
 // Clean up when the page is closed or refreshed
