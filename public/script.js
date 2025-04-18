@@ -7,6 +7,11 @@ const reverseButton = document.getElementById("reverseButton");
 const errorMessage = document.getElementById("errorMessage");
 const snapshotsContainer = document.getElementById("snapshots");
 
+const Education = document.getElementById("option-educate");
+const speculative = document.getElementById("option-speculate");
+const mindful = document.getElementById("option-mindful");
+const funny = document.getElementById("option-funny");
+
 // Variables to store the media stream and current camera
 let stream = null;
 let currentCamera = "environment"; // 'environment' for back camera, 'user' for front camera
@@ -17,7 +22,6 @@ async function startCamera() {
 
   try {
     // Request access to the user's camera
-    // The constraints object specifies what kind of media to request
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: currentCamera,
@@ -86,12 +90,19 @@ function captureSnapshot(event) {
     return;
   }
 
-  // Get click coordinates relative to the video element
+  // Get coordinates - either from click event or use center of video for automatic capture
   const rect = videoElement.getBoundingClientRect();
-  const x =
-    ((event.clientX - rect.left) / rect.width) * videoElement.videoWidth;
-  const y =
-    ((event.clientY - rect.top) / rect.height) * videoElement.videoHeight;
+  let x, y;
+
+  if (event) {
+    // If event exists (click), use click coordinates
+    x = ((event.clientX - rect.left) / rect.width) * videoElement.videoWidth;
+    y = ((event.clientY - rect.top) / rect.height) * videoElement.videoHeight;
+  } else {
+    // For automatic capture, use center of video
+    x = videoElement.videoWidth / 2;
+    y = videoElement.videoHeight / 2;
+  }
 
   // Define square size (50x50 pixels)
   const squareSize = 100;
@@ -139,17 +150,14 @@ function captureSnapshot(event) {
   const now = new Date();
   const timestamp = now.toLocaleTimeString();
 
-  // Create snapshot elements for both images
-  createSnapshotElement(
-    fullImageDataURL,
-    `Full frame at ${timestamp}`,
-    `full_${timestamp.replace(/:/g, "-")}.png`
-  );
-  createSnapshotElement(
-    croppedImageDataURL,
-    `Zoomed area at ${timestamp}`,
-    `zoomed_${timestamp.replace(/:/g, "-")}.png`
-  );
+  // Create a temporary div to show the analysis result
+  const analysisDiv = document.createElement("div");
+  analysisDiv.className = "analysis-result";
+  analysisDiv.textContent = "";
+  document.body.appendChild(analysisDiv);
+
+  // Analyze the cropped image immediately
+  analyzeImage(croppedImageDataURL, analysisDiv);
 
   console.log("Snapshot captured at", timestamp, "at position", x, y);
 }
@@ -183,7 +191,7 @@ function createSnapshotElement(imageURL, caption, filename) {
   // Create a placeholder for the analysis result
   const analysisDiv = document.createElement("div");
   analysisDiv.className = "analysis-result";
-  analysisDiv.textContent = "Analyzing image...";
+  // analysisDiv.textContent = "Analyzing image...";
   snapshotDiv.appendChild(analysisDiv);
 
   // Add the snapshot to the page
@@ -202,7 +210,25 @@ clearButton.addEventListener("click", clearSnapshots);
 reverseButton.addEventListener("click", switchCamera);
 
 // Add click event listener to the video element to capture snapshots
-videoElement.addEventListener("click", captureSnapshot);
+videoElement.addEventListener("click", (event) => {
+  // Only capture if camera is active
+  if (stream) {
+    captureSnapshot(event);
+  } else {
+    errorMessage.textContent = "Please start the camera first";
+  }
+});
+
+// Start the camera when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+  // Start camera immediately when page loads
+  startCamera();
+
+  // Hide the start button since we're starting automatically
+  if (startButton) {
+    startButton.style.display = "none";
+  }
+});
 
 // Clean up when the page is closed or refreshed
 window.addEventListener("beforeunload", () => {
@@ -214,33 +240,57 @@ function analyzeImage(imageURL, resultElement) {
   const base64Image = imageURL.split(",")[1];
 
   if (resultElement) {
-    resultElement.textContent = "Analyzing image...";
+    const loadingImage = document.createElement("img");
+    loadingImage.src = "./icons/loading.png";
+    loadingImage.alt = "Loading";
+    resultElement.innerHTML = ""; // Clear any existing content
+    resultElement.appendChild(loadingImage);
   }
 
-  // Send the base64 data to the server
+  // Get the saved category from localStorage
+  const selectedMode = localStorage.getItem("selectedCategory") || "educate";
+
+  // Send the base64 data and mode to the server
   fetch("/api/analyze", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ base64Image: base64Image }),
+    body: JSON.stringify({
+      base64Image: base64Image,
+      mode: selectedMode,
+    }),
     timeout: 60000,
   })
     .then((response) => response.json())
     .then((data) => {
+      // Create analysis result object
+      const analysisResult = {
+        timestamp: new Date().toISOString(),
+        content: data.content || "No analysis available",
+        audio: data.audio,
+        image: imageURL,
+      };
+
+      // Save to localStorage
+      let savedAnalyses = JSON.parse(
+        localStorage.getItem("analysisResults") || "[]"
+      );
+      savedAnalyses.push(analysisResult);
+      localStorage.setItem("analysisResults", JSON.stringify(savedAnalyses));
+
+      // Update current page if resultElement exists
       if (resultElement) {
-        resultElement.innerHTML = "";
+        resultElement.innerHTML = ""; // Clear loading image
 
-        // Creating text element
-        const textDiv = document.createElement("div");
-        textDiv.className = "text-response";
-        textDiv.textContent = data.content || "No analysis available";
-        resultElement.appendChild(textDiv);
-
-        // Creating an audio element
+        // Only create audio element if audio exists
         if (data.audio) {
+          const audioContainer = document.createElement("div");
+          audioContainer.className = "audio-container";
+
           const audioElement = document.createElement("audio");
           audioElement.controls = true;
+          audioElement.autoplay = true; // Auto-play the audio when it's ready
 
           const audioBlob = new Blob(
             [Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0))],
@@ -248,7 +298,6 @@ function analyzeImage(imageURL, resultElement) {
           );
 
           const audioUrl = URL.createObjectURL(audioBlob);
-
           audioElement.src = audioUrl;
           audioElement.className = "snapshot-audio-player";
 
@@ -256,9 +305,18 @@ function analyzeImage(imageURL, resultElement) {
             URL.revokeObjectURL(audioUrl);
           };
 
-          resultElement.appendChild(audioElement);
-          console.log("playing sound");
+          audioContainer.appendChild(audioElement);
+          resultElement.appendChild(audioContainer);
+          console.log("Audio player created and added to page");
+        } else {
+          console.log("No audio data received from server");
         }
+      }
+
+      // If we're on the archive page, update the analysis display
+      const analysisResultElement = document.getElementById("analysisResult");
+      if (analysisResultElement) {
+        displayAnalysisResults();
       }
     })
     .catch((error) => {
@@ -268,3 +326,91 @@ function analyzeImage(imageURL, resultElement) {
       }
     });
 }
+
+// Function to display analysis results in the archive page
+function displayAnalysisResults() {
+  const analysisResultElement = document.getElementById("analysisResult");
+  const snapshotsContainer = document.getElementById("snapshots");
+
+  if (!analysisResultElement || !snapshotsContainer) return;
+
+  // Clear existing content
+  analysisResultElement.innerHTML = "";
+  snapshotsContainer.innerHTML = "";
+
+  // Get saved analyses
+  const savedAnalyses = JSON.parse(
+    localStorage.getItem("analysisResults") || "[]"
+  );
+
+  // Display each analysis in reverse chronological order
+  savedAnalyses.reverse().forEach((analysis) => {
+    // Create snapshot container
+    const snapshotDiv = document.createElement("div");
+    snapshotDiv.className = "snapshot";
+
+    // Create and add image container
+    const imageContainer = document.createElement("div");
+    imageContainer.className = "snapshot-image-container";
+
+    // Create and add image
+    const img = document.createElement("img");
+    img.src = analysis.image;
+    img.alt = "Captured image";
+    img.className = "snapshot-image";
+    imageContainer.appendChild(img);
+
+    // Create and add timestamp
+    const timestamp = new Date(analysis.timestamp).toLocaleString();
+    const timestampDiv = document.createElement("div");
+    timestampDiv.className = "timestamp";
+    timestampDiv.textContent = timestamp;
+    imageContainer.appendChild(timestampDiv);
+
+    // Add image container to snapshot
+    snapshotDiv.appendChild(imageContainer);
+
+    // Create and add analysis container
+    const analysisContainer = document.createElement("div");
+    analysisContainer.className = "analysis-container";
+
+    // Create and add analysis text
+    const analysisDiv = document.createElement("div");
+    analysisDiv.className = "analysis-text";
+    analysisDiv.textContent = analysis.content;
+    analysisContainer.appendChild(analysisDiv);
+
+    // Create and add audio player if audio exists
+    if (analysis.audio) {
+      const audioElement = document.createElement("audio");
+      audioElement.controls = true;
+      audioElement.className = "snapshot-audio-player";
+
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(analysis.audio), (c) => c.charCodeAt(0))],
+        { type: "audio/mpeg" }
+      );
+      const audioUrl = URL.createObjectURL(audioBlob);
+      audioElement.src = audioUrl;
+
+      audioElement.onloadeddata = () => {
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      analysisContainer.appendChild(audioElement);
+    }
+
+    // Add analysis container to snapshot
+    snapshotDiv.appendChild(analysisContainer);
+
+    // Add the snapshot to the container
+    snapshotsContainer.appendChild(snapshotDiv);
+  });
+}
+
+// Add event listener to load analysis results when archive page loads
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.location.pathname.includes("archive.html")) {
+    displayAnalysisResults();
+  }
+});

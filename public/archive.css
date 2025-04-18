@@ -1,0 +1,128 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Madimi+One&display=swap");
+
+:root {
+  --bg-color: #ecf0ea;
+  --bottom-bar-bg: #e0eadc;
+  --light-text: #88967f;
+  --dark-text: #40483a;
+  --primary-blue: #65b2c2;
+  --primary-yellow: #e1af39;
+  --light-green: #a6bb65;
+  --dark-green: #377440;
+  --light-brown: #c1a16e;
+  --dark-brown: #775a35;
+}
+
+.madimi-one-regular {
+  font-family: "Madimi One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.lexend-paragraph {
+  font-family: "Lexend", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  justify-content: flex-start;
+}
+
+h1 {
+  font-family: "Madimi One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 35px;
+  max-width: 350px;
+  margin: 15px;
+  margin-bottom: 5px;
+  background-color: var(--primary-blue);
+  color: var(--bg-color);
+  border-radius: 25px;
+  padding: 10px 20px;
+  width: 325px;
+}
+
+h2 {
+  font-family: "Madimi One", sans-serif;
+  font-size: 32px;
+  color: var(--dark-text);
+}
+
+.ai-analysis {
+  background-color: var(--bg-color);
+  border-radius: 25px;
+  border: 5px solid var(--primary-blue);
+  padding: 10px 20px;
+}
+
+.snapshots {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.snapshot {
+  background: var(--bg-color);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.snapshot-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.snapshot-image {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+.analysis-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  background: var(--bg-color);
+  border-radius: 10px;
+}
+
+.analysis-text {
+  font-size: 1.1em;
+  line-height: 1.5;
+  color: #333;
+}
+
+.snapshot-audio-player {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .snapshots {
+    padding: 10px;
+  }
+
+  .snapshot {
+    padding: 15px;
+  }
+
+  .analysis-container {
+    padding: 10px;
+  }
+}

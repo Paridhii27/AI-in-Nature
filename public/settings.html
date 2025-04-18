@@ -4,15 +4,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./root.css" />
     <link rel="stylesheet" href="./nav-bar.css" />
+    <link rel="stylesheet" href="./settings.css" />
     <title>Settings</title>
   </head>
   <body>
     <h1>Settings</h1>
     <div class="podcast-tone">
-      <button id="option-educate">Educational</button>
-      <button id="option-speculate">Speculative</button>
-      <button id="option-mindful">Mindful</button>
-      <button id="option-investigate">Mindful</button>
+      <h2>Podcast Tone</h2>
+      <div class="category-buttons">
+        <button id="option-educate" class="category-button">Educational</button>
+        <button id="option-speculate" class="category-button">
+          Speculative
+        </button>
+        <button id="option-mindful" class="category-button">Mindful</button>
+        <button id="option-funny" class="category-button">Funny</button>
+      </div>
+    </div>
+    <div class="podcast-duration">
+      <h2>Duration</h2>
+      <input
+        type="range"
+        min="1"
+        max="10"
+        value="5"
+        class="slider"
+        id="myRange"
+      />
     </div>
 
     <!-- Nav Bar -->
@@ -99,5 +116,7 @@
         </svg>
       </a>
     </div>
+
+    <script src="./settings.js"></script>
   </body>
 </html>

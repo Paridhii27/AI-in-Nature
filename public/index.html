@@ -13,33 +13,39 @@
       <span id="sights">SIGHTS </span><span><img src="./icons/logo.png" /></span
       ><span id="insights">INSIGHTS</span>
     </h1>
+
+    <!-- Video container with controls -->
+    <div class="video-container">
+      <video
+        id="videoElement"
+        autoplay
+        playsinline
+        title="Click to capture selection area"
+      ></video>
+      <button id="startButton" class="overlay-button start-button">
+        <img src="./icons/startCam.png" alt="start" />
+      </button>
+      <button id="reverseButton" class="overlay-button reverse-button">
+        <img src="./icons/reverse.png" alt="reverse" />
+      </button>
+    </div>
+
     <!-- <p>
       Click anywhere on the video to capture an area you want to interact with
-      more. A red square will mark your selection.
+      more.
     </p> -->
-
-    <!-- Video element will display the camera feed -->
-    <video
-      id="videoElement"
-      autoplay
-      playsinline
-      title="Click to capture selection area"
-    ></video>
 
     <!-- Hidden canvas for capturing snapshots -->
     <canvas id="canvas"></canvas>
+    <!-- <div id="snapshots" class="snapshots"></div> -->
 
     <!-- <div class="controls">
       <button id="startButton">Start Camera</button>
       <button id="stopButton">Stop Camera</button>
-      <button id="reverseButton">Reverse</button>
       <button id="clearButton">Clear Snapshots</button>
     </div> -->
 
     <div id="errorMessage" class="error"></div>
-
-    <div id="snapshots" class="snapshots"></div>
-    <p id="analysisResult"></p>
 
     <div class="navbar">
       <a href="archive.html" class="nav-item" id="archive">
