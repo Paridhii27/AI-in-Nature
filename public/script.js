@@ -33,6 +33,9 @@ async function startCamera() {
     // Attach the stream to the video element
     videoElement.srcObject = stream;
 
+    // Add click event listener to video element after stream is started
+    videoElement.addEventListener("click", handleVideoClick);
+
     console.log("Camera started successfully");
   } catch (error) {
     // Handle different types of errors
@@ -49,9 +52,23 @@ async function startCamera() {
   }
 }
 
+// Function to handle video click
+function handleVideoClick(event) {
+  console.log("Video clicked");
+  if (stream) {
+    captureSnapshot(event);
+    console.log("Snapshot captured");
+  } else {
+    errorMessage.textContent = "Please start the camera first";
+  }
+}
+
 // Function to stop the camera
 function stopCamera() {
   if (!stream) return;
+
+  // Remove click event listener
+  videoElement.removeEventListener("click", handleVideoClick);
 
   // Get all tracks from the stream and stop each one
   stream.getTracks().forEach((track) => {
@@ -207,16 +224,6 @@ startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
 clearButton.addEventListener("click", clearSnapshots);
 reverseButton.addEventListener("click", switchCamera);
-
-// Add click event listener to the video element to capture snapshots
-videoElement.addEventListener("click", (event) => {
-  // Only capture if camera is active
-  if (stream) {
-    captureSnapshot(event);
-  } else {
-    errorMessage.textContent = "Please start the camera first";
-  }
-});
 
 // Start the camera when the page loads
 document.addEventListener("DOMContentLoaded", () => {
