@@ -82,7 +82,7 @@ body {
   color: var(--bg-colour);
 }
 
-#start-button {
+#start-app {
   font-family: "Lexend", sans-serif;
   background-color: var(--primary-yellow);
   color: var(--dark-brown);
@@ -102,12 +102,12 @@ body {
   /* animation */
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
-#start-button:hover {
+#start-app:hover {
   background-color: var(--bg-colour);
   border: 5px solid var(--primary-yellow);
   color: var(--dark-brown);
 }
-#start-button:active {
+#start-app:active {
   background-color: var(--bg-colour);
   transform: scale(0.98);
 }

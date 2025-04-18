@@ -1,6 +1,6 @@
 const videoElement = document.getElementById("videoElement");
 const canvas = document.getElementById("canvas");
-const startButton = document.getElementById("camera-start");
+const startButton = document.getElementById("cameraStart");
 const stopButton = document.getElementById("stopButton");
 const clearButton = document.getElementById("clearButton");
 const reverseButton = document.getElementById("reverseButton");
@@ -18,7 +18,8 @@ let currentCamera = "environment"; // 'environment' for back camera, 'user' for 
 
 // Function to start the camera
 async function startCamera() {
-  errorMessage.textContent = ""; // Clear any previous errors
+  // Clear any previous errors
+  errorMessage.textContent = "";
 
   try {
     // Request access to the user's camera
@@ -74,10 +75,8 @@ async function switchCamera() {
 
   // Stop the current stream
   stopCamera();
-
   // Switch the camera facing mode
   currentCamera = currentCamera === "environment" ? "user" : "environment";
-
   // Start the camera with the new facing mode
   await startCamera();
 }
@@ -221,13 +220,17 @@ videoElement.addEventListener("click", (event) => {
 
 // Start the camera when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-  // Start camera immediately when page loads
-  startCamera();
-
-  // Hide the start button since we're starting automatically
+  // Show the start button
   if (startButton) {
-    startButton.style.display = "none";
+    startButton.style.display = "block";
   }
+
+  // Add click event listener to start button
+  startButton.addEventListener("click", () => {
+    startCamera();
+    // Hide the start button after starting the camera
+    startButton.style.display = "none";
+  });
 });
 
 // Clean up when the page is closed or refreshed
