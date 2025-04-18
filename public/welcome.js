@@ -7,7 +7,7 @@ function zoomLeaf() {
   svg.addEventListener(
     "transitionend",
     function () {
-      window.location.href = "index.html";
+      window.location.href = "camera.html";
     },
     { once: true }
   );

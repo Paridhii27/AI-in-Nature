@@ -1,19 +1,52 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./root.css" />
+    <link rel="stylesheet" href="./camera.css" />
     <link rel="stylesheet" href="./nav-bar.css" />
-    <link rel="stylesheet" href="./archive.css" />
-    <title>Audio Archive</title>
+    <title>Sights and Insights</title>
   </head>
   <body>
-    <h1>Audio Archive</h1>
-    <div id="snapshots" class="snapshots"></div>
-    <!-- <div class="ai-analysis">
-      <p id="analysisResult"></p>
+    <h1 id="project-title">
+      <span id="sights">SIGHTS </span><span><img src="./icons/logo.png" /></span
+      ><span id="insights">INSIGHTS</span>
+    </h1>
+
+    <!-- Video container with controls -->
+    <div class="video-container">
+      <video
+        id="videoElement"
+        autoplay
+        playsinline
+        title="Click to capture selection area"
+      ></video>
+      <!-- <button id="camera-start" class="overlay-button">
+        <img src="./icons/startCam.png" alt="start" />
+      </button>
+      <button id="reverseButton" class="overlay-button reverse-button">
+        <img src="./icons/reverse.png" alt="reverse" />
+      </button> -->
+    </div>
+
+    <!-- <p>
+      Click anywhere on the video to capture an area you want to interact with
+      more.
+    </p> -->
+
+    <!-- Hidden canvas for capturing snapshots -->
+    <canvas id="canvas"></canvas>
+    <!-- <div id="snapshots" class="snapshots"></div> -->
+
+    <!-- <div class="controls">
+      <button id="startButton">Start Camera</button>
+      <button id="stopButton">Stop Camera</button>
+      <button id="clearButton">Clear Snapshots</button>
     </div> -->
-    <!-- Nav Bar -->
+
+    <div id="errorMessage" class="error"></div>
+
     <div class="navbar">
       <a href="archive.html" class="nav-item" id="archive">
         <svg
@@ -97,5 +130,7 @@
         </svg>
       </a>
     </div>
+
+    <!-- <script src="./script.js"></script> -->
   </body>
 </html>
