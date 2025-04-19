@@ -1,11 +1,5 @@
 const videoElement = document.getElementById("videoElement");
-const canvas = document.getElementById("canvas");
-const startButton = document.getElementById("cameraStart");
-const stopButton = document.getElementById("stopButton");
-// const clearButton = document.getElementById("clearButton");
-const reverseButton = document.getElementById("reverseButton");
 const errorMessage = document.getElementById("errorMessage");
-
 const cameraStatus = document.getElementById("camera-status");
 const snapshotsContainer = document.getElementById("snapshots");
 const imgAnalysis = document.getElementById("img-analysis");
@@ -18,7 +12,8 @@ const funny = document.getElementById("option-funny");
 
 // Variables to store the media stream and current camera
 let stream = null;
-let currentCamera = "environment"; // 'environment' for back camera, 'user' for front camera
+// 'environment' for back camera, 'user' for front camera
+let currentCamera = "environment";
 
 // Function to start the camera
 async function startCamera() {
@@ -80,7 +75,7 @@ async function startCamera() {
     // Hide camera status when there's an error
     if (cameraStatus) {
       cameraStatus.style.display = "none";
-      cameraStatus.textContent = ""; // Clear any existing text
+      cameraStatus.textContent = "";
     }
 
     console.error("Error accessing camera:", error);
@@ -91,9 +86,15 @@ async function startCamera() {
 function handleVideoClick(event) {
   console.log("Video clicked");
   if (stream) {
-    // Hide camera status when capturing and analyzing
+    // Update camera status to show analyzing message
     if (cameraStatus) {
-      cameraStatus.style.display = "none";
+      cameraStatus.textContent = "";
+      const loadingImage = document.createElement("img");
+      loadingImage.src = "./icons/loading.png";
+      loadingImage.alt = "Loading";
+      loadingImage.className = "loading-image";
+      cameraStatus.style.display = "block";
+      cameraStatus.appendChild(loadingImage);
     }
     captureSnapshot(event);
     console.log("Snapshot captured");
@@ -219,23 +220,6 @@ function captureSnapshot(event) {
   const analysisDiv = document.createElement("div");
   analysisDiv.className = "analysis-result";
 
-  // Create and show loading state
-  const loadingContainer = document.createElement("div");
-  loadingContainer.className = "loading-container";
-
-  const loadingImage = document.createElement("img");
-  loadingImage.src = "./icons/loading.png";
-  loadingImage.alt = "Loading";
-  loadingImage.className = "loading-image";
-
-  const loadingText = document.createElement("div");
-  loadingText.className = "loading-text";
-  loadingText.textContent = "Analyzing image...";
-
-  loadingContainer.appendChild(loadingImage);
-  loadingContainer.appendChild(loadingText);
-  analysisDiv.appendChild(loadingContainer);
-
   // Add it to snapshots container if it exists
   if (snapshotsContainer) {
     const snapshotDiv = document.createElement("div");
@@ -304,23 +288,8 @@ function createSnapshotElement(imageURL, caption, analysisText, audioURL) {
   }
 }
 
-function clearSnapshots() {
-  if (snapshotsContainer) {
-    snapshotsContainer.innerHTML = "";
-  }
-
-  // Also clear stored analyses
-  localStorage.removeItem("analysisResults");
-  console.log("Snapshots and analysis results cleared");
-}
-
 // Ensure all event listeners are only added when the elements exist
 function addEventListeners() {
-  if (startButton) startButton.addEventListener("click", startCamera);
-  if (stopButton) stopButton.addEventListener("click", stopCamera);
-  // if (clearButton) clearButton.addEventListener("click", clearSnapshots);
-  // if (reverseButton) reverseButton.addEventListener("click", switchCamera);
-
   // Add event listeners for mode selection
   if (Education) Education.addEventListener("click", () => setMode("educate"));
   if (speculative)
@@ -348,7 +317,7 @@ function initializePage() {
 
     // Make sure the video element exists
     if (videoElement) {
-      // Add needed attributes for mobile
+      // Add needed attributes for mobile functionality
       videoElement.setAttribute("autoplay", "");
       videoElement.setAttribute("playsinline", ""); // Important for iOS
       videoElement.setAttribute("muted", "");
@@ -381,24 +350,6 @@ async function analyzeImage(imageData, resultElement, fullImageURL = null) {
     if (resultElement) {
       // Clear previous content and create loading container
       resultElement.innerHTML = "";
-      const loadingContainer = document.createElement("div");
-      loadingContainer.className = "loading-container";
-
-      // Create and style loading image
-      const loadingImage = document.createElement("img");
-      loadingImage.src = "./icons/loading.png";
-      loadingImage.alt = "Loading";
-      loadingImage.className = "loading-image";
-
-      // Add loading text
-      const loadingText = document.createElement("div");
-      loadingText.className = "loading-text";
-      loadingText.textContent = "Analyzing image...";
-
-      // Append elements to container
-      loadingContainer.appendChild(loadingImage);
-      loadingContainer.appendChild(loadingText);
-      resultElement.appendChild(loadingContainer);
     }
 
     const selectedMode = localStorage.getItem("selectedCategory") || "educate";
@@ -420,6 +371,8 @@ async function analyzeImage(imageData, resultElement, fullImageURL = null) {
 
     const data = await response.json();
     console.log("Analysis response received");
+    cameraStatus.textContent = "Listen...";
+    cameraStatus.style.display = "block";
 
     // Create new analysis data
     const analysisData = {
@@ -449,6 +402,11 @@ async function analyzeImage(imageData, resultElement, fullImageURL = null) {
         const audio = new Audio(audioUrl);
         audio.play().catch((error) => {
           console.error("Error playing audio:", error);
+        });
+        audio.addEventListener("ended", () => {
+          cameraStatus.textContent =
+            "Click again on the video feed to interact further";
+          console.log("Audio playback finished");
         });
       } catch (audioError) {
         console.error("Error processing audio:", audioError);
