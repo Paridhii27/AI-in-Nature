@@ -5,7 +5,10 @@ const stopButton = document.getElementById("stopButton");
 const clearButton = document.getElementById("clearButton");
 const reverseButton = document.getElementById("reverseButton");
 const errorMessage = document.getElementById("errorMessage");
+
 const snapshotsContainer = document.getElementById("snapshots");
+const imgAnalysis = document.getElementById("img-analysis");
+const audioAnalysis = document.getElementById("audio-analysis");
 
 const Education = document.getElementById("option-educate");
 const speculative = document.getElementById("option-speculate");
@@ -19,7 +22,9 @@ let currentCamera = "environment"; // 'environment' for back camera, 'user' for 
 // Function to start the camera
 async function startCamera() {
   // Clear any previous errors
-  errorMessage.textContent = "";
+  if (errorMessage) {
+    errorMessage.textContent = "";
+  }
 
   try {
     // Request access to the user's camera
@@ -33,19 +38,26 @@ async function startCamera() {
     // Attach the stream to the video element
     videoElement.srcObject = stream;
 
+    // Ensure video plays when it's loaded
+    videoElement.onloadedmetadata = function () {
+      videoElement.play();
+    };
+
     // Add click event listener to video element after stream is started
     videoElement.addEventListener("click", handleVideoClick);
 
     console.log("Camera started successfully");
   } catch (error) {
     // Handle different types of errors
-    if (error.name === "NotAllowedError") {
-      errorMessage.textContent =
-        "Camera access denied. Please allow camera access.";
-    } else if (error.name === "NotFoundError") {
-      errorMessage.textContent = "No camera found on this device.";
-    } else {
-      errorMessage.textContent = `Error accessing camera: ${error.message}`;
+    if (errorMessage) {
+      if (error.name === "NotAllowedError") {
+        errorMessage.textContent =
+          "Camera access denied. Please allow camera access.";
+      } else if (error.name === "NotFoundError") {
+        errorMessage.textContent = "No camera found on this device.";
+      } else {
+        errorMessage.textContent = `Error accessing camera: ${error.message}`;
+      }
     }
 
     console.error("Error accessing camera:", error);
@@ -59,7 +71,9 @@ function handleVideoClick(event) {
     captureSnapshot(event);
     console.log("Snapshot captured");
   } else {
-    errorMessage.textContent = "Please start the camera first";
+    if (errorMessage) {
+      errorMessage.textContent = "Please start the camera first";
+    }
   }
 }
 
@@ -85,8 +99,10 @@ function stopCamera() {
 // Function to switch between front and back cameras
 async function switchCamera() {
   if (!stream) {
-    errorMessage.textContent =
-      "Camera is not active. Please start the camera first.";
+    if (errorMessage) {
+      errorMessage.textContent =
+        "Camera is not active. Please start the camera first.";
+    }
     return;
   }
 
@@ -101,8 +117,10 @@ async function switchCamera() {
 // Function to capture a snapshot from the video stream with a highlighted area
 function captureSnapshot(event) {
   if (!stream) {
-    errorMessage.textContent =
-      "Camera is not active. Please start the camera first.";
+    if (errorMessage) {
+      errorMessage.textContent =
+        "Camera is not active. Please start the camera first.";
+    }
     return;
   }
 
@@ -173,7 +191,7 @@ function captureSnapshot(event) {
   document.body.appendChild(analysisDiv);
 
   // Analyze the cropped image immediately
-  analyzeImage(croppedImageDataURL, analysisDiv);
+  analyzeImage(croppedImageDataURL, analysisDiv, fullImageDataURL);
 
   console.log("Snapshot captured at", timestamp, "at position", x, y);
 }
@@ -220,32 +238,55 @@ function clearSnapshots() {
   snapshotsContainer.innerHTML = "";
 }
 
-startButton.addEventListener("click", startCamera);
-stopButton.addEventListener("click", stopCamera);
-clearButton.addEventListener("click", clearSnapshots);
-reverseButton.addEventListener("click", switchCamera);
+// Ensure all event listeners are only added when the elements exist
+function addEventListeners() {
+  if (startButton) startButton.addEventListener("click", startCamera);
+  if (stopButton) stopButton.addEventListener("click", stopCamera);
+  if (clearButton) clearButton.addEventListener("click", clearSnapshots);
+  if (reverseButton) reverseButton.addEventListener("click", switchCamera);
+}
 
-// Start the camera when the page loads
-document.addEventListener("DOMContentLoaded", () => {
-  // Show the start button
-  if (startButton) {
-    startButton.style.display = "block";
+// Automatically start the camera on camera.html page
+function initializePage() {
+  // Check if we're on the camera page
+  if (window.location.pathname.includes("camera.html")) {
+    console.log("Camera page detected, starting camera automatically");
+
+    // Make sure the video element exists
+    if (videoElement) {
+      // Add needed attributes for mobile
+      videoElement.setAttribute("autoplay", "");
+      videoElement.setAttribute("playsinline", ""); // Important for iOS
+      videoElement.setAttribute("muted", "");
+
+      // Start camera automatically
+      startCamera().catch((error) => {
+        console.error("Failed to start camera during page init:", error);
+        if (errorMessage) {
+          errorMessage.textContent =
+            "Failed to start camera. Please check permissions.";
+        }
+      });
+    } else {
+      console.error("Video element not found on camera page");
+    }
+  } else if (window.location.pathname.includes("archive.html")) {
+    displayAnalysisResults();
   }
 
-  // Add click event listener to start button
-  startButton.addEventListener("click", () => {
-    startCamera();
-    // Hide the start button after starting the camera
-    startButton.style.display = "none";
-  });
+  // Add event listeners regardless of page
+  addEventListeners();
+}
+
+// Don't stop the camera when navigating between pages
+window.addEventListener("beforeunload", (event) => {
+  // Only stop the camera if the browser/tab is actually closing
+  if (event.type === "beforeunload" && !event.isTrusted) {
+    stopCamera();
+  }
 });
 
-// Clean up when the page is closed or refreshed
-window.addEventListener("beforeunload", () => {
-  stopCamera();
-});
-
-function analyzeImage(imageURL, resultElement) {
+function analyzeImage(imageURL, resultElement, fullImageURL = null) {
   // Extract base64 data from the dataURL
   const base64Image = imageURL.split(",")[1];
 
@@ -253,7 +294,7 @@ function analyzeImage(imageURL, resultElement) {
     const loadingImage = document.createElement("img");
     loadingImage.src = "./icons/loading.png";
     loadingImage.alt = "Loading";
-    resultElement.innerHTML = ""; // Clear any existing content
+    resultElement.innerHTML = ""; // Clear loading image
     resultElement.appendChild(loadingImage);
   }
 
@@ -279,7 +320,7 @@ function analyzeImage(imageURL, resultElement) {
         timestamp: new Date().toISOString(),
         content: data.content || "No analysis available",
         audio: data.audio,
-        image: imageURL,
+        image: fullImageURL || imageURL, // Use the full image with red square if available
       };
 
       // Save to localStorage
@@ -292,6 +333,20 @@ function analyzeImage(imageURL, resultElement) {
       // Update current page if resultElement exists
       if (resultElement) {
         resultElement.innerHTML = ""; // Clear loading image
+
+        if (data.content) {
+          // Create a new div for the analysis text
+          // const analysisTextDiv = document.createElement("div");
+          // analysisTextDiv.className = "analysis-text";
+          // analysisTextDiv.textContent = data.content;
+          // resultElement.appendChild(analysisTextDiv);
+
+          // Also update the imgAnalysis element if it exists
+          const imgAnalysisElement = document.getElementById("img-analysis");
+          if (imgAnalysisElement) {
+            imgAnalysisElement.textContent = data.content;
+          }
+        }
 
         // Only create audio element if audio exists
         if (data.audio) {
@@ -341,6 +396,7 @@ function analyzeImage(imageURL, resultElement) {
 function displayAnalysisResults() {
   const analysisResultElement = document.getElementById("analysisResult");
   const snapshotsContainer = document.getElementById("snapshots");
+  const imgAnalysisElement = document.getElementById("img-analysis");
 
   if (!analysisResultElement || !snapshotsContainer) return;
 
@@ -352,6 +408,12 @@ function displayAnalysisResults() {
   const savedAnalyses = JSON.parse(
     localStorage.getItem("analysisResults") || "[]"
   );
+
+  // If there are analyses, display the most recent one in the img-analysis div
+  if (savedAnalyses.length > 0 && imgAnalysisElement) {
+    const mostRecentAnalysis = savedAnalyses[savedAnalyses.length - 1];
+    imgAnalysisElement.textContent = mostRecentAnalysis.content;
+  }
 
   // Display each analysis in reverse chronological order
   savedAnalyses.reverse().forEach((analysis) => {
@@ -418,9 +480,5 @@ function displayAnalysisResults() {
   });
 }
 
-// Add event listener to load analysis results when archive page loads
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.location.pathname.includes("archive.html")) {
-    displayAnalysisResults();
-  }
-});
+// Use DOMContentLoaded to initialize the page
+document.addEventListener("DOMContentLoaded", initializePage);
