@@ -2,10 +2,11 @@ const videoElement = document.getElementById("videoElement");
 const canvas = document.getElementById("canvas");
 const startButton = document.getElementById("cameraStart");
 const stopButton = document.getElementById("stopButton");
-const clearButton = document.getElementById("clearButton");
+// const clearButton = document.getElementById("clearButton");
 const reverseButton = document.getElementById("reverseButton");
 const errorMessage = document.getElementById("errorMessage");
 
+const cameraStatus = document.getElementById("camera-status");
 const snapshotsContainer = document.getElementById("snapshots");
 const imgAnalysis = document.getElementById("img-analysis");
 const audioAnalysis = document.getElementById("audio-analysis");
@@ -24,6 +25,12 @@ async function startCamera() {
   // Clear any previous errors
   if (errorMessage) {
     errorMessage.textContent = "";
+  }
+
+  // Ensure cameraStatus is hidden before starting
+  if (cameraStatus) {
+    cameraStatus.style.display = "none";
+    cameraStatus.textContent = ""; // Clear any existing text
   }
 
   try {
@@ -46,9 +53,19 @@ async function startCamera() {
     // Add click event listener to video element after stream is started
     videoElement.addEventListener("click", handleVideoClick);
 
+    // Set text content first, then show the element
+    if (cameraStatus) {
+      cameraStatus.textContent =
+        "Click anywhere on the video to capture an area you want to interact with more.";
+      // Use requestAnimationFrame to ensure the text is set before showing the element
+      requestAnimationFrame(() => {
+        cameraStatus.style.display = "block";
+      });
+    }
+
     console.log("Camera started successfully");
   } catch (error) {
-    // Handle different types of errors
+    //Handling camera errors
     if (errorMessage) {
       if (error.name === "NotAllowedError") {
         errorMessage.textContent =
@@ -60,14 +77,24 @@ async function startCamera() {
       }
     }
 
+    // Hide camera status when there's an error
+    if (cameraStatus) {
+      cameraStatus.style.display = "none";
+      cameraStatus.textContent = ""; // Clear any existing text
+    }
+
     console.error("Error accessing camera:", error);
   }
 }
 
-// Function to handle video click
+// Function to handle video click to capture snapshot
 function handleVideoClick(event) {
   console.log("Video clicked");
   if (stream) {
+    // Hide camera status when capturing and analyzing
+    if (cameraStatus) {
+      cameraStatus.style.display = "none";
+    }
     captureSnapshot(event);
     console.log("Snapshot captured");
   } else {
@@ -93,6 +120,11 @@ function stopCamera() {
   videoElement.srcObject = null;
   stream = null;
 
+  // Hide camera status when camera is stopped
+  if (cameraStatus) {
+    cameraStatus.style.display = "none";
+  }
+
   console.log("Camera stopped");
 }
 
@@ -105,7 +137,6 @@ async function switchCamera() {
     }
     return;
   }
-
   // Stop the current stream
   stopCamera();
   // Switch the camera facing mode
@@ -187,17 +218,56 @@ function captureSnapshot(event) {
   // Create a temporary div to show the analysis result
   const analysisDiv = document.createElement("div");
   analysisDiv.className = "analysis-result";
-  analysisDiv.textContent = "";
-  document.body.appendChild(analysisDiv);
 
-  // Analyze the cropped image immediately
-  analyzeImage(croppedImageDataURL, analysisDiv, fullImageDataURL);
+  // Create and show loading state
+  const loadingContainer = document.createElement("div");
+  loadingContainer.className = "loading-container";
+
+  const loadingImage = document.createElement("img");
+  loadingImage.src = "./icons/loading.png";
+  loadingImage.alt = "Loading";
+  loadingImage.className = "loading-image";
+
+  const loadingText = document.createElement("div");
+  loadingText.className = "loading-text";
+  loadingText.textContent = "Analyzing image...";
+
+  loadingContainer.appendChild(loadingImage);
+  loadingContainer.appendChild(loadingText);
+  analysisDiv.appendChild(loadingContainer);
+
+  // Add it to snapshots container if it exists
+  if (snapshotsContainer) {
+    const snapshotDiv = document.createElement("div");
+    snapshotDiv.className = "snapshot";
+
+    // Create image element
+    const img = document.createElement("img");
+    img.src = fullImageDataURL;
+    img.alt = "Snapshot at " + timestamp;
+    snapshotDiv.appendChild(img);
+
+    // Add timestamp
+    const timestampDiv = document.createElement("div");
+    timestampDiv.className = "timestamp";
+    timestampDiv.textContent = timestamp;
+    snapshotDiv.appendChild(timestampDiv);
+
+    // Add analysis div
+    snapshotDiv.appendChild(analysisDiv);
+
+    // Add to container
+    snapshotsContainer.prepend(snapshotDiv);
+  }
+
+  // Analyze the full image with red box
+  analyzeImage(fullImageDataURL, analysisDiv, fullImageDataURL);
 
   console.log("Snapshot captured at", timestamp, "at position", x, y);
 }
 
 // Function to create and add a snapshot element to the page
-function createSnapshotElement(imageURL, caption, filename) {
+function createSnapshotElement(imageURL, caption, analysisText, audioURL) {
   // Create container for the snapshot
   const snapshotDiv = document.createElement("div");
   snapshotDiv.className = "snapshot";
@@ -206,50 +276,74 @@ function createSnapshotElement(imageURL, caption, filename) {
   const img = document.createElement("img");
   img.src = imageURL;
   img.alt = caption;
-
-  // Create download link
-  const downloadLink = document.createElement("a");
-  downloadLink.href = imageURL;
-  downloadLink.download = filename;
-  downloadLink.appendChild(img);
+  snapshotDiv.appendChild(img);
 
   // Create timestamp display
   const timestampDiv = document.createElement("div");
   timestampDiv.className = "timestamp";
   timestampDiv.textContent = caption;
-
-  // Add all elements to the snapshot container
-  snapshotDiv.appendChild(downloadLink);
   snapshotDiv.appendChild(timestampDiv);
 
-  // Create a placeholder for the analysis result
+  // Create analysis text div
   const analysisDiv = document.createElement("div");
   analysisDiv.className = "analysis-result";
-  // analysisDiv.textContent = "Analyzing image...";
+  analysisDiv.textContent = analysisText || "Analysis not available";
   snapshotDiv.appendChild(analysisDiv);
 
-  // Add the snapshot to the page
-  snapshotsContainer.appendChild(snapshotDiv);
+  // Create audio element if URL provided
+  if (audioURL) {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = audioURL;
+    snapshotDiv.appendChild(audio);
+  }
 
-  analyzeImage(imageURL, analysisDiv);
+  // Add the snapshot to the page
+  if (snapshotsContainer) {
+    snapshotsContainer.prepend(snapshotDiv);
+  }
 }
 
 function clearSnapshots() {
-  snapshotsContainer.innerHTML = "";
+  if (snapshotsContainer) {
+    snapshotsContainer.innerHTML = "";
+  }
+
+  // Also clear stored analyses
+  localStorage.removeItem("analysisResults");
+  console.log("Snapshots and analysis results cleared");
 }
 
 // Ensure all event listeners are only added when the elements exist
 function addEventListeners() {
   if (startButton) startButton.addEventListener("click", startCamera);
   if (stopButton) stopButton.addEventListener("click", stopCamera);
-  if (clearButton) clearButton.addEventListener("click", clearSnapshots);
-  if (reverseButton) reverseButton.addEventListener("click", switchCamera);
+  // if (clearButton) clearButton.addEventListener("click", clearSnapshots);
+  // if (reverseButton) reverseButton.addEventListener("click", switchCamera);
+
+  // Add event listeners for mode selection
+  if (Education) Education.addEventListener("click", () => setMode("educate"));
+  if (speculative)
+    speculative.addEventListener("click", () => setMode("speculate"));
+  if (mindful) mindful.addEventListener("click", () => setMode("mindful"));
+  if (funny) funny.addEventListener("click", () => setMode("funny"));
+}
+
+function setMode(mode) {
+  localStorage.setItem("selectedCategory", mode);
+  console.log("Mode set to:", mode);
 }
 
 // Automatically start the camera on camera.html page
 function initializePage() {
+  console.log("Initializing page:", window.location.pathname);
+
   // Check if we're on the camera page
-  if (window.location.pathname.includes("camera.html")) {
+  if (
+    window.location.pathname.includes("camera.html") ||
+    window.location.pathname === "/" ||
+    window.location.pathname === ""
+  ) {
     console.log("Camera page detected, starting camera automatically");
 
     // Make sure the video element exists
@@ -271,6 +365,7 @@ function initializePage() {
       console.error("Video element not found on camera page");
     }
   } else if (window.location.pathname.includes("archive.html")) {
+    console.log("Archive page detected, displaying analysis results");
     displayAnalysisResults();
   }
 
@@ -278,206 +373,181 @@ function initializePage() {
   addEventListeners();
 }
 
-// Don't stop the camera when navigating between pages
-window.addEventListener("beforeunload", (event) => {
-  // Only stop the camera if the browser/tab is actually closing
-  if (event.type === "beforeunload" && !event.isTrusted) {
-    stopCamera();
-  }
-});
+async function analyzeImage(imageData, resultElement, fullImageURL = null) {
+  try {
+    // Extract base64 data from the dataURL
+    const base64Image = imageData.split(",")[1];
 
-function analyzeImage(imageURL, resultElement, fullImageURL = null) {
-  // Extract base64 data from the dataURL
-  const base64Image = imageURL.split(",")[1];
+    if (resultElement) {
+      // Clear previous content and create loading container
+      resultElement.innerHTML = "";
+      const loadingContainer = document.createElement("div");
+      loadingContainer.className = "loading-container";
 
-  if (resultElement) {
-    const loadingImage = document.createElement("img");
-    loadingImage.src = "./icons/loading.png";
-    loadingImage.alt = "Loading";
-    resultElement.innerHTML = ""; // Clear loading image
-    resultElement.appendChild(loadingImage);
-  }
+      // Create and style loading image
+      const loadingImage = document.createElement("img");
+      loadingImage.src = "./icons/loading.png";
+      loadingImage.alt = "Loading";
+      loadingImage.className = "loading-image";
 
-  // Get the saved category from localStorage
-  const selectedMode = localStorage.getItem("selectedCategory") || "educate";
+      // Add loading text
+      const loadingText = document.createElement("div");
+      loadingText.className = "loading-text";
+      loadingText.textContent = "Analyzing image...";
 
-  // Send the base64 data and mode to the server
-  fetch("/api/analyze", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      base64Image: base64Image,
-      mode: selectedMode,
-    }),
-    timeout: 60000,
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      // Create analysis result object
-      const analysisResult = {
-        timestamp: new Date().toISOString(),
-        content: data.content || "No analysis available",
-        audio: data.audio,
-        image: fullImageURL || imageURL, // Use the full image with red square if available
-      };
+      // Append elements to container
+      loadingContainer.appendChild(loadingImage);
+      loadingContainer.appendChild(loadingText);
+      resultElement.appendChild(loadingContainer);
+    }
 
-      // Save to localStorage
-      let savedAnalyses = JSON.parse(
-        localStorage.getItem("analysisResults") || "[]"
-      );
-      savedAnalyses.push(analysisResult);
-      localStorage.setItem("analysisResults", JSON.stringify(savedAnalyses));
+    const selectedMode = localStorage.getItem("selectedCategory") || "educate";
 
-      // Update current page if resultElement exists
-      if (resultElement) {
-        resultElement.innerHTML = ""; // Clear loading image
-
-        if (data.content) {
-          // Create a new div for the analysis text
-          // const analysisTextDiv = document.createElement("div");
-          // analysisTextDiv.className = "analysis-text";
-          // analysisTextDiv.textContent = data.content;
-          // resultElement.appendChild(analysisTextDiv);
-
-          // Also update the imgAnalysis element if it exists
-          const imgAnalysisElement = document.getElementById("img-analysis");
-          if (imgAnalysisElement) {
-            imgAnalysisElement.textContent = data.content;
-          }
-        }
-
-        // Only create audio element if audio exists
-        if (data.audio) {
-          const audioContainer = document.createElement("div");
-          audioContainer.className = "audio-container";
-
-          const audioElement = document.createElement("audio");
-          audioElement.controls = true;
-          audioElement.autoplay = true; // Auto-play the audio when it's ready
-
-          const audioBlob = new Blob(
-            [Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0))],
-            { type: "audio/mpeg" }
-          );
-
-          const audioUrl = URL.createObjectURL(audioBlob);
-          audioElement.src = audioUrl;
-          audioElement.className = "snapshot-audio-player";
-
-          audioElement.onloadeddata = () => {
-            URL.revokeObjectURL(audioUrl);
-          };
-
-          audioContainer.appendChild(audioElement);
-          resultElement.appendChild(audioContainer);
-          console.log("Audio player created and added to page");
-        } else {
-          console.log("No audio data received from server");
-        }
-      }
-
-      // If we're on the archive page, update the analysis display
-      const analysisResultElement = document.getElementById("analysisResult");
-      if (analysisResultElement) {
-        displayAnalysisResults();
-      }
-    })
-    .catch((error) => {
-      console.error("Error analyzing image:", error);
-      if (resultElement) {
-        resultElement.textContent = "Error analyzing image";
-      }
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        base64Image: base64Image,
+        mode: selectedMode,
+      }),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Analysis response received");
+
+    // Create new analysis data
+    const analysisData = {
+      timestamp: new Date().toLocaleString(),
+      image: fullImageURL || imageData,
+      analysis: data.content || "No analysis available",
+      audioUrl: data.audio,
+    };
+
+    // Store only the latest analysis
+    localStorage.setItem("analysisResults", JSON.stringify([analysisData]));
+
+    // Display the analysis in the result element
+    if (resultElement) {
+      resultElement.innerHTML = ""; // Clear loading state
+      resultElement.textContent = data.content || "No analysis available";
+    }
+
+    // Play the audio if available on the camera page
+    if (data.audio) {
+      try {
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0))],
+          { type: "audio/mpeg" }
+        );
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+      } catch (audioError) {
+        console.error("Error processing audio:", audioError);
+      }
+    }
+  } catch (error) {
+    console.error("Error analyzing image:", error);
+    if (resultElement) {
+      resultElement.innerHTML = ""; // Clear loading state
+      resultElement.textContent = "Error analyzing image. Please try again.";
+    }
+  }
 }
 
-// Function to display analysis results in the archive page
 function displayAnalysisResults() {
   const analysisResultElement = document.getElementById("analysisResult");
   const snapshotsContainer = document.getElementById("snapshots");
-  const imgAnalysisElement = document.getElementById("img-analysis");
 
-  if (!analysisResultElement || !snapshotsContainer) return;
+  if (!snapshotsContainer) {
+    console.error("Snapshots container not found on archive page");
+    return;
+  }
 
   // Clear existing content
-  analysisResultElement.innerHTML = "";
-  snapshotsContainer.innerHTML = "";
+  if (snapshotsContainer) {
+    snapshotsContainer.innerHTML = "";
+  }
 
-  // Get saved analyses
+  if (analysisResultElement) {
+    analysisResultElement.innerHTML = "";
+  }
+
+  // Get the latest analysis
   const savedAnalyses = JSON.parse(
     localStorage.getItem("analysisResults") || "[]"
   );
 
-  // If there are analyses, display the most recent one in the img-analysis div
-  if (savedAnalyses.length > 0 && imgAnalysisElement) {
-    const mostRecentAnalysis = savedAnalyses[savedAnalyses.length - 1];
-    imgAnalysisElement.textContent = mostRecentAnalysis.content;
+  // Get the first (and only) analysis instead of storing multiple analyses which fill up the local storage
+  const latestAnalysis = savedAnalyses[0];
+
+  console.log("Displaying latest analysis");
+
+  if (!latestAnalysis) {
+    const noDataMsg = document.createElement("div");
+    noDataMsg.className = "no-data-message";
+    noDataMsg.textContent =
+      "No analysis results available. Capture an image on the camera page first.";
+    snapshotsContainer.appendChild(noDataMsg);
+    return;
   }
 
-  // Display each analysis in reverse chronological order
-  savedAnalyses.reverse().forEach((analysis) => {
-    // Create snapshot container
-    const snapshotDiv = document.createElement("div");
-    snapshotDiv.className = "snapshot";
+  // Create snapshot container
+  const snapshotContainer = document.createElement("div");
+  snapshotContainer.className = "snapshot-container";
 
-    // Create and add image container
-    const imageContainer = document.createElement("div");
-    imageContainer.className = "snapshot-image-container";
+  // Create and append image
+  const img = document.createElement("img");
+  img.src = latestAnalysis.image;
+  img.className = "snapshot-image";
+  snapshotContainer.appendChild(img);
 
-    // Create and add image
-    const img = document.createElement("img");
-    img.src = analysis.image;
-    img.alt = "Captured image";
-    img.className = "snapshot-image";
-    imageContainer.appendChild(img);
+  // Create and append timestamp
+  const timestamp = document.createElement("div");
+  timestamp.className = "snapshot-timestamp";
+  timestamp.textContent = latestAnalysis.timestamp;
+  snapshotContainer.appendChild(timestamp);
 
-    // Create and add timestamp
-    const timestamp = new Date(analysis.timestamp).toLocaleString();
-    const timestampDiv = document.createElement("div");
-    timestampDiv.className = "timestamp";
-    timestampDiv.textContent = timestamp;
-    imageContainer.appendChild(timestampDiv);
-
-    // Add image container to snapshot
-    snapshotDiv.appendChild(imageContainer);
-
-    // Create and add analysis container
-    const analysisContainer = document.createElement("div");
-    analysisContainer.className = "analysis-container";
-
-    // Create and add analysis text
-    const analysisDiv = document.createElement("div");
-    analysisDiv.className = "analysis-text";
-    analysisDiv.textContent = analysis.content;
-    analysisContainer.appendChild(analysisDiv);
-
-    // Create and add audio player if audio exists
-    if (analysis.audio) {
-      const audioElement = document.createElement("audio");
-      audioElement.controls = true;
-      audioElement.className = "snapshot-audio-player";
-
+  // Add audio player if available
+  if (latestAnalysis.audioUrl) {
+    try {
       const audioBlob = new Blob(
-        [Uint8Array.from(atob(analysis.audio), (c) => c.charCodeAt(0))],
+        [
+          Uint8Array.from(atob(latestAnalysis.audioUrl), (c) =>
+            c.charCodeAt(0)
+          ),
+        ],
         { type: "audio/mpeg" }
       );
       const audioUrl = URL.createObjectURL(audioBlob);
-      audioElement.src = audioUrl;
 
-      audioElement.onloadeddata = () => {
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      analysisContainer.appendChild(audioElement);
+      // Create and append audio player to the snapshot container
+      const audioPlayer = document.createElement("audio");
+      audioPlayer.controls = true;
+      audioPlayer.src = audioUrl;
+      audioPlayer.className = "analysis-audio";
+      snapshotContainer.appendChild(audioPlayer);
+    } catch (error) {
+      console.error("Error creating audio player:", error);
     }
+  }
 
-    // Add analysis container to snapshot
-    snapshotDiv.appendChild(analysisContainer);
+  // Create and append analysis text with scrolling
+  const analysisText = document.createElement("div");
+  analysisText.className = "analysis-text";
+  analysisText.textContent = latestAnalysis.analysis;
+  snapshotContainer.appendChild(analysisText);
 
-    // Add the snapshot to the container
-    snapshotsContainer.appendChild(snapshotDiv);
-  });
+  // Append snapshot container to show the analysis on archive page
+  snapshotsContainer.appendChild(snapshotContainer);
 }
 
 // Use DOMContentLoaded to initialize the page

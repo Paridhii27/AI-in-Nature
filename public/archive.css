@@ -52,7 +52,7 @@ h2 {
   color: var(--dark-text);
 }
 
-.ai-analysis {
+#ai-analysis {
   background-color: var(--bg-color);
   border-radius: 25px;
   border: 5px solid var(--primary-blue);
@@ -82,7 +82,7 @@ h2 {
   position: relative;
   width: 100%;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 10px auto;
 }
 
 .snapshot-image {
@@ -90,6 +90,13 @@ h2 {
   height: auto;
   border-radius: 10px;
   display: block;
+}
+
+.snapshot-timestamp {
+  font-family: "Lexend", sans-serif;
+  font-size: 0.9em;
+  color: var(--dark-text);
+  margin-bottom: 10px;
 }
 
 .analysis-container {
@@ -102,14 +109,42 @@ h2 {
 }
 
 .analysis-text {
-  font-size: 1.1em;
+  font-family: "Lexend", sans-serif;
+  font-size: 0.9em;
   line-height: 1.5;
-  color: #333;
+  color: var(--dark-text);
+  height: 180px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-blue) var(--bg-color);
+  border-radius: 20px;
+  border: 5px solid var(--primary-blue);
+  padding: 15px 25px;
+}
+
+/* Customize scrollbar for analysis text */
+.analysis-text::-webkit-scrollbar {
+  width: 8px;
+}
+
+.analysis-text::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.analysis-text::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.analysis-text::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .snapshot-audio-player {
   width: 100%;
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 /* Responsive design */

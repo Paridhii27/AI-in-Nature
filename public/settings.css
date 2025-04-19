@@ -95,6 +95,7 @@ button {
   font-size: 24px;
   font-family: "Lexend", sans-serif;
   gap: 15px;
+  transition: all 0.3s ease;
 }
 
 button:hover {
@@ -102,11 +103,18 @@ button:hover {
   color: var(--bg-color);
 }
 
-button:active {
+button.active {
+  background-color: var(--primary-yellow);
+  color: var(--bg-color);
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* button:active {
   background-color: var(--primary-yellow);
   color: var(--bg-color);
   box-shadow: #40483a;
-}
+} */
 
 .slider {
   -webkit-appearance: none;

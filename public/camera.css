@@ -60,7 +60,7 @@ h1 {
 .video-container {
   position: relative;
   width: 90%;
-  height: calc(95% - 95px - 120px);
+  height: calc(90% - 95px - 140px);
   max-width: 640px;
   margin: 10px 20px;
   border: 5px solid var(--light-green);
@@ -129,6 +129,18 @@ button:hover {
   background-color: #3367d6;
 }
 
+#camera-status {
+  font-family: "Lexend", sans-serif;
+  font-size: 0.9em;
+  color: var(--dark-text);
+  max-width: 350px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: var(--bg-color);
+  border-radius: 10px;
+  border: 5px solid var(--light-green);
+}
+
 .controls {
   margin: 20px 0;
 }
@@ -172,6 +184,36 @@ button:hover {
   width: 100%;
   max-width: 300px;
   margin: 10px 0;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-image {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 10px;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  color: #666;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Adjustments for larger screens */
