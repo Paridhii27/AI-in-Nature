@@ -14,6 +14,8 @@ const funny = document.getElementById("option-funny");
 let stream = null;
 // 'environment' for back camera, 'user' for front camera
 let currentCamera = "environment";
+// Flag to track if audio is currently playing
+let isAudioPlaying = false;
 
 // Function to start the camera
 async function startCamera() {
@@ -86,18 +88,28 @@ async function startCamera() {
 function handleVideoClick(event) {
   console.log("Video clicked");
   if (stream) {
-    // Update camera status to show analyzing message
-    if (cameraStatus) {
-      cameraStatus.textContent = "";
-      const loadingImage = document.createElement("img");
-      loadingImage.src = "./icons/loading.png";
-      loadingImage.alt = "Loading";
-      loadingImage.className = "loading-image";
-      cameraStatus.style.display = "block";
-      cameraStatus.appendChild(loadingImage);
+    // Only proceed if audio is not playing
+    if (!isAudioPlaying) {
+      // Update camera status to show analyzing message
+      if (cameraStatus) {
+        cameraStatus.textContent = "";
+        const loadingImage = document.createElement("img");
+        loadingImage.src = "./icons/loading.png";
+        loadingImage.alt = "Loading";
+        loadingImage.className = "loading-image";
+        cameraStatus.style.display = "block";
+        cameraStatus.appendChild(loadingImage);
+      }
+      captureSnapshot(event);
+      console.log("Snapshot captured");
+    } else {
+      // Show message that analysis is disabled during audio playback
+      if (cameraStatus) {
+        cameraStatus.textContent =
+          "Please wait for the audio to finish before capturing a new image";
+        cameraStatus.style.display = "block";
+      }
     }
-    captureSnapshot(event);
-    console.log("Snapshot captured");
   } else {
     if (errorMessage) {
       errorMessage.textContent = "Please start the camera first";
@@ -400,16 +412,24 @@ async function analyzeImage(imageData, resultElement, fullImageURL = null) {
         );
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
+
+        // Set flag when audio starts playing
+        isAudioPlaying = true;
+
         audio.play().catch((error) => {
           console.error("Error playing audio:", error);
+          isAudioPlaying = false; // Reset flag if audio fails to play
         });
+
         audio.addEventListener("ended", () => {
+          isAudioPlaying = false; // Reset flag when audio ends
           cameraStatus.textContent =
             "Click again on the video feed to interact further";
           console.log("Audio playback finished");
         });
       } catch (audioError) {
         console.error("Error processing audio:", audioError);
+        isAudioPlaying = false; // Reset flag if there's an error
       }
     }
   } catch (error) {
@@ -418,6 +438,7 @@ async function analyzeImage(imageData, resultElement, fullImageURL = null) {
       resultElement.innerHTML = ""; // Clear loading state
       resultElement.textContent = "Error analyzing image. Please try again.";
     }
+    isAudioPlaying = false; // Reset flag if there's an error
   }
 }
 
