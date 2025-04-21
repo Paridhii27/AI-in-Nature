@@ -64,6 +64,7 @@ h2 {
   align-items: center;
   justify-content: center;
   width: 325px;
+  height: 50%;
   margin: 10px 20px;
   padding: 10px 20px;
 }
