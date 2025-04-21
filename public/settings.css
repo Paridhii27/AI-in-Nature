@@ -51,6 +51,8 @@ h2 {
   font-family: "Madimi One", sans-serif;
   font-size: 32px;
   color: var(--dark-text);
+  margin-top: 0px;
+  margin-bottom: 0px;
   text-align: left;
 }
 
@@ -74,8 +76,14 @@ h2 {
 }
 
 .category-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
   gap: 25px;
-  padding: 10px 0px;
+  /* padding: 10px 10px; */
+  width: 100%;
+  max-width: 300px;
+  margin: 0;
 }
 
 .podcast-duration {
@@ -87,15 +95,25 @@ h2 {
 }
 
 button {
-  width: 95%;
-  padding: 10px 60px;
+  width: 100%;
   border: 3px solid var(--primary-yellow);
   background-color: var(--bg-color);
   border-radius: 15px;
-  font-size: 24px;
+  font-size: 15px;
   font-family: "Lexend", sans-serif;
-  gap: 15px;
   transition: all 0.3s ease;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  gap: 8px;
+}
+
+button svg {
+  width: 100px;
+  height: 100px;
 }
 
 button:hover {
