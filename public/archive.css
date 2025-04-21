@@ -64,14 +64,18 @@ h2 {
   flex-direction: column;
   gap: 20px;
   padding: 20px;
+  padding-top: 10px;
   max-width: 800px;
   margin: 0 auto;
+  flex: 1;
+  margin-bottom: 100px; /* Space for the nav bar */
 }
 
 .snapshot {
   background: var(--bg-color);
   border-radius: 15px;
   padding: 20px;
+  padding-top: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -86,10 +90,12 @@ h2 {
 }
 
 .snapshot-image {
-  width: 100%;
+  width: 94.5%;
+  border: 5px solid var(--primary-blue);
+  border-radius: 15px;
   height: auto;
-  border-radius: 10px;
   display: block;
+  margin: 0 auto; 
 }
 
 .snapshot-timestamp {
@@ -113,7 +119,7 @@ h2 {
   font-size: 0.9em;
   line-height: 1.5;
   color: var(--dark-text);
-  height: 180px;
+  max-height: 55%;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -121,6 +127,7 @@ h2 {
   border-radius: 20px;
   border: 5px solid var(--primary-blue);
   padding: 15px 25px;
+  margin-top: 10px;
 }
 
 /* Customize scrollbar for analysis text */
@@ -144,7 +151,7 @@ h2 {
 
 .snapshot-audio-player {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 /* Responsive design */
