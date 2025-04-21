@@ -38,13 +38,16 @@ h1 {
   font-size: 35px;
   margin: 15px;
   margin-bottom: 5px;
-  width: 380px;
+  /* max-width: 380px; */
 }
 
 #project-title {
   background-color: var(--light-green);
   border-radius: 25px;
-  padding-bottom: 10px;
+  padding: 10px;
+ padding-left: 40px;
+ padding-right: 40px;
+  max-width: 380px;
 }
 
 #sights {
